@@ -1,0 +1,1852 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+    <title>LoveSatoru</title>
+    <style>
+        :root {
+            --bg: #f5f5f5;
+            --topbar-bg: #ffffff;
+            --bottombar-bg: #ffffff;
+            --accent: #6B8E7B;
+            --accent-light: #e8f0ec;
+            --user-bubble: #D4E7DC;
+            --partner-bubble: #ffffff;
+            --text: #1a1a1a;
+            --text-secondary: #666;
+            --border: #e0e0e0;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            --bg-image: none;
+            --bg-opacity: 0.05;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        input,
+        textarea {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #1a1a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: var(--font);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            height: 100vh;
+            height: 100dvh;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.3);
+        }
+        .app-container::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: var(--bg-image);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: var(--bg-opacity);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* 顶栏 */
+        .topbar {
+            position: relative;
+            z-index: 10;
+            background: var(--topbar-bg);
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--border);
+            min-height: 56px;
+            flex-shrink: 0;
+        }
+        .topbar .partner-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            cursor: pointer;
+            flex-shrink: 0;
+            background: #e0e0e0;
+            border: 2px solid var(--accent);
+        }
+        .topbar .partner-info {
+            flex: 1;
+            min-width: 0;
+            cursor: pointer;
+        }
+        .topbar .partner-name {
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--text);
+            line-height: 1.2;
+        }
+        .topbar .partner-status {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.3;
+            transition: opacity 0.4s;
+        }
+        .topbar .topbar-actions {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .topbar .btn-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: #f0f0f0;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #555;
+            transition: all 0.2s;
+        }
+        .topbar .btn-icon:active {
+            background: #ddd;
+            transform: scale(0.92);
+        }
+
+        /* 聊天区域 */
+        .chat-area {
+            position: relative;
+            z-index: 5;
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            -webkit-overflow-scrolling: touch;
+            scroll-behavior: smooth;
+        }
+        .chat-area::-webkit-scrollbar {
+            width: 0;
+        }
+
+        .msg-row {
+            display: flex;
+            flex-direction: column;
+            max-width: 80%;
+            animation: msgIn 0.25s ease-out;
+        }
+        @keyframes msgIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .msg-row.user {
+            align-self: flex-end;
+            align-items: flex-end;
+        }
+        .msg-row.partner {
+            align-self: flex-start;
+            align-items: flex-start;
+        }
+        .msg-row .reply-preview {
+            font-size: 11px;
+            color: #888;
+            background: rgba(0, 0, 0, 0.04);
+            border-radius: 8px;
+            padding: 5px 8px;
+            margin-bottom: 3px;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            border-left: 3px solid var(--accent);
+            cursor: pointer;
+        }
+        .msg-bubble {
+            padding: 10px 13px;
+            border-radius: var(--radius);
+            font-size: 14px;
+            line-height: 1.5;
+            word-break: break-word;
+            position: relative;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .msg-row.user .msg-bubble {
+            background: var(--user-bubble);
+            border-bottom-right-radius: 4px;
+        }
+        .msg-row.partner .msg-bubble {
+            background: var(--partner-bubble);
+            border-bottom-left-radius: 4px;
+        }
+        .msg-bubble img.sticker-msg {
+            max-width: 140px;
+            max-height: 140px;
+            border-radius: 8px;
+            display: block;
+        }
+        .msg-row .msg-time {
+            font-size: 10px;
+            color: #999;
+            margin-top: 2px;
+            padding: 0 4px;
+        }
+        .msg-row .msg-read {
+            font-size: 10px;
+            color: var(--accent);
+            margin-top: 1px;
+            padding: 0 4px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .msg-row .msg-read.visible {
+            opacity: 1;
+        }
+        .msg-row .msg-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 3px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .msg-row:hover .msg-actions,
+        .msg-row .msg-actions.show {
+            opacity: 1;
+        }
+        .msg-row .msg-actions button {
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            background: #fff;
+            cursor: pointer;
+            color: #555;
+            transition: all 0.2s;
+        }
+        .msg-row .msg-actions button:active {
+            background: #eee;
+            transform: scale(0.94);
+        }
+        .msg-row .msg-actions button.danger {
+            color: #e05;
+            border-color: #fcc;
+        }
+
+        /* 输入中 */
+        .typing-indicator {
+            align-self: flex-start;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            background: #fff;
+            border-radius: 18px;
+            font-size: 12px;
+            color: #888;
+            box-shadow: var(--shadow);
+            animation: msgIn 0.25s ease-out;
+        }
+        .typing-dots {
+            display: flex;
+            gap: 3px;
+        }
+        .typing-dots span {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #bbb;
+            animation: dotBounce 1.2s infinite ease-in-out;
+        }
+        .typing-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes dotBounce {
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+                opacity: 0.4;
+            }
+            30% {
+                transform: translateY(-8px);
+                opacity: 1;
+            }
+        }
+
+        /* 底栏 */
+        .bottombar {
+            position: relative;
+            z-index: 10;
+            background: var(--bottombar-bg);
+            border-top: 1px solid var(--border);
+            padding: 8px 10px;
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            flex-shrink: 0;
+            min-height: 50px;
+        }
+        .bottombar .input-wrap {
+            flex: 1;
+            background: #f2f2f2;
+            border-radius: 22px;
+            padding: 8px 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 38px;
+            transition: all 0.2s;
+        }
+        .bottombar .input-wrap:focus-within {
+            background: #e8e8e8;
+            box-shadow: 0 0 0 2px var(--accent-light);
+        }
+        .bottombar .reply-indicator {
+            display: none;
+            background: #f8f8f8;
+            border-radius: 14px;
+            padding: 6px 10px;
+            font-size: 11px;
+            color: #777;
+            margin-bottom: 4px;
+            border-left: 3px solid var(--accent);
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        .bottombar .reply-indicator.active {
+            display: block;
+        }
+        .bottombar input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-size: 14px;
+            outline: none;
+            color: var(--text);
+            min-width: 0;
+            font-family: var(--font);
+        }
+        .bottombar .btn-send {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: none;
+            background: var(--accent);
+            color: #fff;
+            cursor: pointer;
+            font-size: 18px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .bottombar .btn-send:active {
+            transform: scale(0.9);
+            opacity: 0.8;
+        }
+        .bottombar .btn-sticker {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            background: #f0f0f0;
+            cursor: pointer;
+            font-size: 18px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .bottombar .btn-sticker:active {
+            background: #ddd;
+            transform: scale(0.9);
+        }
+
+        /* 表情包面板 */
+        .sticker-panel {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border-top: 1px solid var(--border);
+            border-radius: 16px 16px 0 0;
+            padding: 12px;
+            display: none;
+            z-index: 20;
+            max-height: 280px;
+            overflow-y: auto;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.12);
+        }
+        .sticker-panel.active {
+            display: block;
+        }
+        .sticker-panel .sticker-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+        .sticker-panel .sticker-item {
+            aspect-ratio: 1;
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            background: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .sticker-panel .sticker-item:active {
+            transform: scale(0.9);
+            opacity: 0.7;
+        }
+        .sticker-panel .sticker-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .sticker-panel .sticker-import {
+            grid-column: 1/-1;
+            text-align: center;
+            padding: 10px;
+            font-size: 12px;
+            color: var(--accent);
+            cursor: pointer;
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+        .sticker-panel .sticker-import:active {
+            background: var(--accent-light);
+        }
+
+        /* 弹窗 */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            animation: fadeIn 0.2s;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        .modal-sheet {
+            width: 100%;
+            max-width: 480px;
+            background: #fff;
+            border-radius: 20px 20px 0 0;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 20px 16px;
+            padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+            animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+            }
+            to {
+                transform: translateY(0);
+            }
+        }
+        .modal-sheet h3 {
+            font-size: 17px;
+            margin-bottom: 14px;
+            text-align: center;
+            color: var(--text);
+        }
+        .modal-sheet .form-group {
+            margin-bottom: 12px;
+        }
+        .modal-sheet label {
+            font-size: 13px;
+            color: #555;
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+        .modal-sheet input[type="text"],
+        .modal-sheet input[type="number"],
+        .modal-sheet textarea,
+        .modal-sheet select {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+            font-family: var(--font);
+            background: #fafafa;
+            outline: none;
+            transition: all 0.2s;
+            color: var(--text);
+        }
+        .modal-sheet input:focus,
+        .modal-sheet textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-light);
+        }
+        .modal-sheet textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        .modal-sheet .btn-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .modal-sheet button {
+            padding: 10px 16px;
+            border-radius: 20px;
+            border: none;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            font-family: var(--font);
+        }
+        .modal-sheet button:active {
+            transform: scale(0.94);
+            opacity: 0.8;
+        }
+        .modal-sheet .btn-primary {
+            background: var(--accent);
+            color: #fff;
+        }
+        .modal-sheet .btn-outline {
+            background: #fff;
+            border: 1.5px solid var(--accent);
+            color: var(--accent);
+        }
+        .modal-sheet .btn-danger {
+            background: #fdd;
+            color: #c00;
+        }
+        .modal-sheet .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 14px;
+        }
+        .modal-sheet .chip-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 6px;
+        }
+        .modal-sheet .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 12px;
+            border-radius: 16px;
+            background: #f0f0f0;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #444;
+        }
+        .modal-sheet .chip.active {
+            background: var(--accent);
+            color: #fff;
+        }
+        .modal-sheet .chip .chip-del {
+            font-size: 14px;
+            margin-left: 2px;
+            opacity: 0.6;
+        }
+        .modal-sheet .chip .chip-del:hover {
+            opacity: 1;
+            color: #e00;
+        }
+        .range-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .range-group input[type="range"] {
+            flex: 1;
+            accent-color: var(--accent);
+            height: 6px;
+        }
+        .range-group .range-val {
+            font-weight: 600;
+            font-size: 13px;
+            min-width: 45px;
+            text-align: center;
+            color: var(--accent);
+        }
+        .color-picker-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .color-dot {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        .color-dot.selected {
+            border-color: #333;
+            transform: scale(1.15);
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+        }
+        .color-dot:active {
+            transform: scale(0.9);
+        }
+
+        @media (max-width: 400px) {
+            .msg-row {
+                max-width: 88%;
+            }
+            .msg-bubble {
+                font-size: 13px;
+                padding: 8px 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container" id="appContainer">
+        <!-- 顶栏 -->
+        <div class="topbar" id="topbar">
+            <img class="partner-avatar" id="partnerAvatar" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Ccircle cx='40' cy='40' r='40' fill='%23c8d6e5'/%3E%3Ctext x='40' y='52' text-anchor='middle' font-size='36' fill='%23fff'%3E🤍%3C/text%3E%3C/svg%3E" alt="对方头像" title="点击更换对方头像">
+            <div class="partner-info" id="partnerInfo">
+                <div class="partner-name" id="partnerNameDisplay">Satoru</div>
+                <div class="partner-status" id="partnerStatusDisplay">💭 在想你...</div>
+            </div>
+            <div class="topbar-actions">
+                <button class="btn-icon" id="btnSettings" title="设置">⚙️</button>
+                <button class="btn-icon" id="btnWordCards" title="字卡板块">📝</button>
+            </div>
+        </div>
+
+        <!-- 聊天区域 -->
+        <div class="chat-area" id="chatArea"></div>
+
+        <!-- 输入中指示器容器 -->
+        <div id="typingContainer" style="padding:0 12px;position:relative;z-index:5;"></div>
+
+        <!-- 底栏 -->
+        <div class="bottombar" id="bottombar">
+            <button class="btn-sticker" id="btnStickerToggle" title="表情包">😊</button>
+            <div style="display:flex;flex-direction:column;flex:1;min-width:0;">
+                <div class="reply-indicator" id="replyIndicator" title="点击取消引用">↩ 引用消息</div>
+                <div class="input-wrap">
+                    <input type="text" id="msgInput" placeholder="输入消息..." autocomplete="off">
+                </div>
+            </div>
+            <button class="btn-send" id="btnSend">↑</button>
+        </div>
+
+        <!-- 表情包面板 -->
+        <div class="sticker-panel" id="stickerPanel">
+            <div class="sticker-grid" id="stickerGrid">
+                <div class="sticker-import" id="stickerImportBtn">+ 导入表情包</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 隐藏的文件输入 -->
+    <input type="file" accept="image/*" id="hiddenFileInput" style="display:none">
+    <input type="file" accept="image/*" id="hiddenAvatarInput" style="display:none">
+    <input type="file" accept="image/*" id="hiddenBgInput" style="display:none">
+    <input type="file" accept=".json,application/json" id="hiddenJsonInput" style="display:none">
+
+    <script>
+        (function() {
+            // ==================== IndexedDB ====================
+            const DB_NAME = 'LoveSatoruDB';
+            const DB_VERSION = 3;
+            let db;
+
+            function openDB() {
+                return new Promise((resolve, reject) => {
+                    const req = indexedDB.open(DB_NAME, DB_VERSION);
+                    req.onupgradeneeded = (e) => {
+                        const d = e.target.result;
+                        if (!d.objectStoreNames.contains('messages')) d.createObjectStore('messages', {
+                            keyPath: 'id' });
+                        if (!d.objectStoreNames.contains('wordCardGroups')) d.createObjectStore('wordCardGroups', {
+                            keyPath: 'id' });
+                        if (!d.objectStoreNames.contains('wordCards')) d.createObjectStore('wordCards', {
+                            keyPath: 'id',
+                            autoIncrement: true });
+                        if (!d.objectStoreNames.contains('partnerStickers')) d.createObjectStore(
+                            'partnerStickers', { keyPath: 'id', autoIncrement: true });
+                        if (!d.objectStoreNames.contains('userStickers')) d.createObjectStore('userStickers', {
+                            keyPath: 'id',
+                            autoIncrement: true });
+                        if (!d.objectStoreNames.contains('settings')) d.createObjectStore('settings', {
+                            keyPath: 'key' });
+                        if (!d.objectStoreNames.contains('avatars')) d.createObjectStore('avatars', {
+                            keyPath: 'key' });
+                    };
+                    req.onsuccess = (e) => { db = e.target.result;
+                        resolve(db); };
+                    req.onerror = () => reject(req.error);
+                });
+            }
+
+            function dbPut(storeName, data) {
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction(storeName, 'readwrite');
+                    const store = tx.objectStore(storeName);
+                    const req = store.put(data);
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => reject(req.error);
+                });
+            }
+
+            function dbGetAll(storeName) {
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction(storeName, 'readonly');
+                    const store = tx.objectStore(storeName);
+                    const req = store.getAll();
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => reject(req.error);
+                });
+            }
+
+            function dbGet(storeName, key) {
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction(storeName, 'readonly');
+                    const store = tx.objectStore(storeName);
+                    const req = store.get(key);
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => reject(req.error);
+                });
+            }
+
+            function dbDelete(storeName, key) {
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction(storeName, 'readwrite');
+                    const store = tx.objectStore(storeName);
+                    const req = store.delete(key);
+                    req.onsuccess = () => resolve();
+                    req.onerror = () => reject(req.error);
+                });
+            }
+
+            function dbClear(storeName) {
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction(storeName, 'readwrite');
+                    const store = tx.objectStore(storeName);
+                    const req = store.clear();
+                    req.onsuccess = () => resolve();
+                    req.onerror = () => reject(req.error);
+                });
+            }
+
+            // ==================== 全局状态 ====================
+            let partnerName = 'Satoru';
+            let partnerStatus = '💭 在想你...';
+            let statusWords = ['💭 在想你...', '✨ 今天很开心', '🌙 有点困了', '🎵 在听歌', '📖 在看书', '☕ 喝杯咖啡',
+                '🌟 元气满满', '💤 休息中', '🎮 游戏中', '🍰 想吃甜食'
+            ];
+            let replyMinSec = 2; // 最快回复秒数
+            let replyMaxSec = 30; // 最慢回复秒数(上限240s)
+            let accentColor = '#6B8E7B';
+            let topbarBg = '#ffffff';
+            let bottombarBg = '#ffffff';
+            let bgImageData = null;
+            let bgOpacity = 0.08;
+            let activeWordCardGroupId = null; // 活跃字卡分组(null=全部)
+            let replyQueueTimer = null;
+            let isReplyPending = false;
+            let unreadUserMsgIds = [];
+            let replyToMsgId = null; // 当前引用的消息ID
+
+            // ==================== DOM引用 ====================
+            const $ = (sel) => document.querySelector(sel);
+            const $$ = (sel) => document.querySelectorAll(sel);
+
+            const appContainer = $('#appContainer');
+            const chatArea = $('#chatArea');
+            const msgInput = $('#msgInput');
+            const btnSend = $('#btnSend');
+            const btnStickerToggle = $('#btnStickerToggle');
+            const stickerPanel = $('#stickerPanel');
+            const stickerGrid = $('#stickerGrid');
+            const stickerImportBtn = $('#stickerImportBtn');
+            const typingContainer = $('#typingContainer');
+            const replyIndicator = $('#replyIndicator');
+            const partnerAvatar = $('#partnerAvatar');
+            const partnerNameDisplay = $('#partnerNameDisplay');
+            const partnerStatusDisplay = $('#partnerStatusDisplay');
+            const hiddenFileInput = $('#hiddenFileInput');
+            const hiddenAvatarInput = $('#hiddenAvatarInput');
+            const hiddenBgInput = $('#hiddenBgInput');
+            const hiddenJsonInput = $('#hiddenJsonInput');
+            const btnSettings = $('#btnSettings');
+            const btnWordCards = $('#btnWordCards');
+
+            let currentStickerImportTarget = 'user'; // 'user' | 'partner'
+
+            // ==================== 初始化 ====================
+            async function init() {
+                await openDB();
+                await loadAllData();
+                renderAllMessages();
+                applyAllSettings();
+                startStatusRotator();
+                scrollToBottom();
+                setupEventListeners();
+            }
+
+            async function loadAllData() {
+                // 加载设置
+                const settingsArr = await dbGetAll('settings');
+                const settingsMap = {};
+                settingsArr.forEach(s => settingsMap[s.key] = s.value);
+                if (settingsMap['partnerName']) partnerName = settingsMap['partnerName'];
+                if (settingsMap['partnerStatus']) partnerStatus = settingsMap['partnerStatus'];
+                if (settingsMap['statusWords']) statusWords = JSON.parse(settingsMap['statusWords']);
+                if (settingsMap['replyMinSec'] !== undefined) replyMinSec = Number(settingsMap['replyMinSec']);
+                if (settingsMap['replyMaxSec'] !== undefined) replyMaxSec = Number(settingsMap['replyMaxSec']);
+                if (settingsMap['accentColor']) accentColor = settingsMap['accentColor'];
+                if (settingsMap['topbarBg']) topbarBg = settingsMap['topbarBg'];
+                if (settingsMap['bottombarBg']) bottombarBg = settingsMap['bottombarBg'];
+                if (settingsMap['bgImageData']) bgImageData = settingsMap['bgImageData'];
+                if (settingsMap['bgOpacity'] !== undefined) bgOpacity = Number(settingsMap['bgOpacity']);
+                if (settingsMap['activeWordCardGroupId'] !== undefined) activeWordCardGroupId = settingsMap[
+                    'activeWordCardGroupId'];
+
+                // 加载头像
+                const avatarsArr = await dbGetAll('avatars');
+                avatarsArr.forEach(a => {
+                    if (a.key === 'partnerAvatar' && a.value) partnerAvatar.src = a.value;
+                    if (a.key === 'userAvatar' && a.value) {
+                        window._userAvatarData = a.value;
+                    }
+                });
+                partnerNameDisplay.textContent = partnerName;
+                partnerStatusDisplay.textContent = partnerStatus;
+            }
+
+            function applyAllSettings() {
+                document.documentElement.style.setProperty('--accent', accentColor);
+                document.documentElement.style.setProperty('--accent-light', hexToRgba(accentColor, 0.18));
+                document.documentElement.style.setProperty('--user-bubble', hexToRgba(accentColor, 0.22));
+                document.documentElement.style.setProperty('--topbar-bg', topbarBg);
+                document.documentElement.style.setProperty('--bottombar-bg', bottombarBg);
+                if (bgImageData) {
+                    appContainer.style.setProperty('--bg-image', `url(${bgImageData})`);
+                    appContainer.style.setProperty('--bg-opacity', bgOpacity);
+                } else {
+                    appContainer.style.setProperty('--bg-image', 'none');
+                    appContainer.style.setProperty('--bg-opacity', '0');
+                }
+                partnerNameDisplay.textContent = partnerName;
+                partnerStatusDisplay.textContent = partnerStatus;
+                btnSend.style.background = accentColor;
+            }
+
+            function hexToRgba(hex, alpha) {
+                const r = parseInt(hex.slice(1, 3), 16);
+                const g = parseInt(hex.slice(3, 5), 16);
+                const b = parseInt(hex.slice(5, 7), 16);
+                return `rgba(${r},${g},${b},${alpha})`;
+            }
+
+            // ==================== 消息渲染 ====================
+            async function getAllMessages() {
+                const msgs = await dbGetAll('messages');
+                msgs.sort((a, b) => a.timestamp - b.timestamp);
+                return msgs;
+            }
+
+            async function renderAllMessages() {
+                const msgs = await getAllMessages();
+                chatArea.innerHTML = '';
+                msgs.forEach(m => appendMsgToDOM(m, false));
+                scrollToBottom();
+            }
+
+            function appendMsgToDOM(msg, animate = true) {
+                const row = document.createElement('div');
+                row.className = `msg-row ${msg.sender}`;
+                row.dataset.msgId = msg.id;
+                row.style.animation = animate ? 'msgIn 0.25s ease-out' : 'none';
+
+                let html = '';
+                // 引用预览
+                if (msg.replyTo && msg.replyContent) {
+                    html +=
+                        `<div class="reply-preview" data-ref-id="${msg.replyTo}">↩ ${escapeHtml(msg.replyContent)}</div>`;
+                }
+                // 气泡
+                if (msg.type === 'sticker') {
+                    html +=
+                        `<div class="msg-bubble" data-msg-id="${msg.id}"><img class="sticker-msg" src="${msg.content}" alt="表情"></div>`;
+                } else {
+                    html += `<div class="msg-bubble" data-msg-id="${msg.id}">${escapeHtml(msg.content)}</div>`;
+                }
+                // 时间
+                const timeStr = formatTime(msg.timestamp);
+                html += `<div class="msg-time">${timeStr}</div>`;
+                // 已读标记(仅用户消息)
+                if (msg.sender === 'user') {
+                    html += `<div class="msg-read ${msg.read ? 'visible' : ''}" data-read-id="${msg.id}">已读 ✓✓</div>`;
+                }
+                // 操作按钮
+                html += `<div class="msg-actions">
+                    <button class="btn-reply" data-msg-id="${msg.id}">↩引用</button>
+                    ${msg.sender === 'partner' ? `<button class="btn-del-msg danger" data-msg-id="${msg.id}">🗑删除</button>` : ''}
+                </div>`;
+
+                row.innerHTML = html;
+                chatArea.appendChild(row);
+
+                // 绑定事件
+                const bubble = row.querySelector('.msg-bubble');
+                if (bubble) {
+                    bubble.addEventListener('click', () => toggleMsgActions(row));
+                    bubble.addEventListener('longpress', () => toggleMsgActions(row));
+                }
+                row.querySelector('.btn-reply')?.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    setReplyTarget(msg);
+                });
+                row.querySelector('.btn-del-msg')?.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    if (confirm('确定删除这条消息吗？')) {
+                        await dbDelete('messages', msg.id);
+                        row.remove();
+                    }
+                });
+                row.querySelector('.reply-preview')?.addEventListener('click', () => {
+                    const refId = row.querySelector('.reply-preview').dataset.refId;
+                    scrollToMsg(refId);
+                });
+
+                // 长按检测
+                let pressTimer;
+                bubble?.addEventListener('touchstart', () => {
+                    pressTimer = setTimeout(() => toggleMsgActions(row), 500);
+                });
+                bubble?.addEventListener('touchend', () => clearTimeout(pressTimer));
+                bubble?.addEventListener('touchmove', () => clearTimeout(pressTimer));
+            }
+
+            function toggleMsgActions(row) {
+                const actions = row.querySelector('.msg-actions');
+                if (actions) {
+                    actions.classList.toggle('show');
+                    // 自动隐藏
+                    if (actions.classList.contains('show')) {
+                        setTimeout(() => actions.classList.remove('show'), 3000);
+                    }
+                }
+            }
+
+            function setReplyTarget(msg) {
+                replyToMsgId = msg.id;
+                const preview = msg.type === 'sticker' ? '[表情包]' : (msg.content || '').substring(0, 30);
+                replyIndicator.textContent = `↩ ${preview}`;
+                replyIndicator.classList.add('active');
+                msgInput.focus();
+            }
+
+            function scrollToMsg(msgId) {
+                const row = chatArea.querySelector(`[data-msg-id="${msgId}"]`);
+                if (row) {
+                    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    row.style.background = 'rgba(255,200,50,0.3)';
+                    setTimeout(() => row.style.background = '', 1500);
+                }
+            }
+
+            function scrollToBottom() {
+                requestAnimationFrame(() => {
+                    chatArea.scrollTop = chatArea.scrollHeight;
+                });
+            }
+
+            function formatTime(ts) {
+                const d = new Date(ts);
+                const now = new Date();
+                const hh = String(d.getHours()).padStart(2, '0');
+                const mm = String(d.getMinutes()).padStart(2, '0');
+                if (d.toDateString() === now.toDateString()) return `${hh}:${mm}`;
+                const M = String(d.getMonth() + 1).padStart(2, '0');
+                const DD = String(d.getDate()).padStart(2, '0');
+                return `${M}/${DD} ${hh}:${mm}`;
+            }
+
+            function escapeHtml(str) {
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+
+            // ==================== 发送消息 ====================
+            async function sendMessage(content, type = 'text') {
+                const msg = {
+                    id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+                    type: type,
+                    content: content,
+                    sender: 'user',
+                    timestamp: Date.now(),
+                    read: false,
+                    replyTo: replyToMsgId,
+                    replyContent: replyToMsgId ? await getMsgPreview(replyToMsgId) : null
+                };
+                await dbPut('messages', msg);
+                appendMsgToDOM(msg, true);
+                scrollToBottom();
+                replyToMsgId = null;
+                replyIndicator.classList.remove('active');
+                replyIndicator.textContent = '↩ 引用消息';
+                unreadUserMsgIds.push(msg.id);
+                triggerPartnerReply();
+            }
+
+            async function getMsgPreview(msgId) {
+                const all = await getAllMessages();
+                const m = all.find(x => x.id === msgId);
+                if (!m) return null;
+                if (m.type === 'sticker') return '[表情包]';
+                return (m.content || '').substring(0, 40);
+            }
+
+            // ==================== 模拟对方回复 ====================
+            function triggerPartnerReply() {
+                if (replyQueueTimer) clearTimeout(replyQueueTimer);
+                isReplyPending = true;
+                const delay = replyMinSec * 1000 + Math.random() * (replyMaxSec * 1000 - replyMinSec * 1000);
+                replyQueueTimer = setTimeout(async () => {
+                    await executePartnerReply();
+                }, Math.max(500, delay));
+            }
+
+            async function executePartnerReply() {
+                isReplyPending = false;
+                // 标记所有未读用户消息为已读
+                for (const mid of unreadUserMsgIds) {
+                    const m = await dbGet('messages', mid);
+                    if (m && !m.read) {
+                        m.read = true;
+                        await dbPut('messages', m);
+                        updateReadMark(mid);
+                    }
+                }
+                unreadUserMsgIds = [];
+
+                // 显示输入中
+                showTypingIndicator(true);
+                const typingDuration = 1500 + Math.random() * 3000;
+                await sleep(typingDuration);
+                showTypingIndicator(false);
+
+                // 从字卡和表情包库中选择1-3条回复
+                const replyItems = await pickRandomReplies();
+                if (replyItems.length === 0) {
+                    // 没有字卡，发送默认回复
+                    const defaultMsg = {
+                        id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+                        type: 'text',
+                        content: '嗯嗯~ 💕',
+                        sender: 'partner',
+                        timestamp: Date.now(),
+                        read: true,
+                        replyTo: null,
+                        replyContent: null
+                    };
+                    await dbPut('messages', defaultMsg);
+                    appendMsgToDOM(defaultMsg, true);
+                } else {
+                    for (const item of replyItems) {
+                        const pm = {
+                            id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+                            type: item.type,
+                            content: item.content,
+                            sender: 'partner',
+                            timestamp: Date.now(),
+                            read: true,
+                            replyTo: null,
+                            replyContent: null
+                        };
+                        await dbPut('messages', pm);
+                        appendMsgToDOM(pm, true);
+                        await sleep(300 + Math.random() * 600);
+                    }
+                }
+                scrollToBottom();
+            }
+
+            async function pickRandomReplies() {
+                const count = Math.floor(Math.random() * 3) + 1; // 1-3条
+                const pool = [];
+                // 获取字卡
+                let cards;
+                if (activeWordCardGroupId) {
+                    cards = (await dbGetAll('wordCards')).filter(c => c.groupId === activeWordCardGroupId);
+                } else {
+                    cards = await dbGetAll('wordCards');
+                }
+                cards.forEach(c => pool.push({ type: 'text', content: c.content }));
+                // 获取对方表情包库
+                const pStickers = await dbGetAll('partnerStickers');
+                pStickers.forEach(s => pool.push({ type: 'sticker', content: s.data }));
+
+                if (pool.length === 0) return [];
+                const selected = [];
+                const used = new Set();
+                const actualCount = Math.min(count, pool.length);
+                while (selected.length < actualCount) {
+                    const idx = Math.floor(Math.random() * pool.length);
+                    if (!used.has(idx) || pool.length <= actualCount) {
+                        selected.push(pool[idx]);
+                        used.add(idx);
+                    }
+                    if (used.size >= pool.length) break;
+                }
+                return selected.slice(0, actualCount);
+            }
+
+            function updateReadMark(msgId) {
+                const el = chatArea.querySelector(`[data-read-id="${msgId}"]`);
+                if (el) el.classList.add('visible');
+            }
+
+            function showTypingIndicator(show) {
+                typingContainer.innerHTML = '';
+                if (show) {
+                    const div = document.createElement('div');
+                    div.className = 'typing-indicator';
+                    div.innerHTML =
+                        '<span>对方正在输入</span><div class="typing-dots"><span></span><span></span><span></span></div>';
+                    typingContainer.appendChild(div);
+                    scrollToBottom();
+                }
+            }
+
+            function sleep(ms) {
+                return new Promise(r => setTimeout(r, ms));
+            }
+
+            // ==================== 状态词轮换 ====================
+            function startStatusRotator() {
+                function rotate() {
+                    if (statusWords.length > 0) {
+                        const idx = Math.floor(Math.random() * statusWords.length);
+                        partnerStatus = statusWords[idx];
+                        partnerStatusDisplay.textContent = partnerStatus;
+                        dbPut('settings', { key: 'partnerStatus', value: partnerStatus }).catch(() => {});
+                    }
+                    const next = 3 * 60000 + Math.random() * 20 * 60000; // 3-23分钟
+                    setTimeout(rotate, next);
+                }
+                setTimeout(rotate, 2 * 60000 + Math.random() * 8 * 60000);
+            }
+
+            // ==================== 事件监听 ====================
+            function setupEventListeners() {
+                // 发送
+                btnSend.addEventListener('click', () => doSend());
+                msgInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        doSend();
+                    }
+                });
+
+                // 表情包面板
+                btnStickerToggle.addEventListener('click', async () => {
+                    stickerPanel.classList.toggle('active');
+                    if (stickerPanel.classList.contains('active')) {
+                        currentStickerImportTarget = 'user';
+                        await renderStickerPanel();
+                    }
+                });
+
+                stickerImportBtn.addEventListener('click', () => {
+                    currentStickerImportTarget = 'user';
+                    hiddenFileInput.click();
+                });
+
+                hiddenFileInput.addEventListener('change', async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const b64 = await fileToBase64(file);
+                    if (currentStickerImportTarget === 'user') {
+                        await dbPut('userStickers', { data: b64, timestamp: Date.now() });
+                    } else if (currentStickerImportTarget === 'partner') {
+                        await dbPut('partnerStickers', { data: b64, timestamp: Date.now() });
+                    }
+                    await renderStickerPanel();
+                    hiddenFileInput.value = '';
+                });
+
+                // 头像
+                partnerAvatar.addEventListener('click', () => hiddenAvatarInput.click());
+                hiddenAvatarInput.addEventListener('change', async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const b64 = await fileToBase64(file);
+                    partnerAvatar.src = b64;
+                    await dbPut('avatars', { key: 'partnerAvatar', value: b64 });
+                    hiddenAvatarInput.value = '';
+                });
+
+                // 背景图
+                hiddenBgInput.addEventListener('change', async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    const b64 = await fileToBase64(file);
+                    bgImageData = b64;
+                    await dbPut('settings', { key: 'bgImageData', value: b64 });
+                    applyAllSettings();
+                    hiddenBgInput.value = '';
+                });
+
+                // 设置按钮
+                btnSettings.addEventListener('click', () => showSettingsModal());
+                btnWordCards.addEventListener('click', () => showWordCardModal());
+
+                // 点击外部关闭面板
+                document.addEventListener('click', (e) => {
+                    if (!stickerPanel.contains(e.target) && e.target !== btnStickerToggle && !btnStickerToggle
+                        .contains(e.target)) {
+                        stickerPanel.classList.remove('active');
+                    }
+                });
+
+                // 引用取消
+                replyIndicator.addEventListener('click', () => {
+                    replyToMsgId = null;
+                    replyIndicator.classList.remove('active');
+                    replyIndicator.textContent = '↩ 引用消息';
+                });
+            }
+
+            function doSend() {
+                const text = msgInput.value.trim();
+                if (!text) return;
+                sendMessage(text, 'text');
+                msgInput.value = '';
+                msgInput.focus();
+            }
+
+            async function renderStickerPanel() {
+                const stickers = await dbGetAll('userStickers');
+                stickerGrid.innerHTML = '';
+                stickers.forEach(s => {
+                    const div = document.createElement('div');
+                    div.className = 'sticker-item';
+                    div.innerHTML = `<img src="${s.data}" alt="表情">`;
+                    div.addEventListener('click', async () => {
+                        await sendMessage(s.data, 'sticker');
+                        stickerPanel.classList.remove('active');
+                    });
+                    // 长按删除
+                    let pt;
+                    div.addEventListener('touchstart', () => { pt = setTimeout(() => {
+                            if (confirm('删除这个表情包？')) {
+                                dbDelete('userStickers', s.id).then(() => renderStickerPanel());
+                            }
+                        }, 700); });
+                    div.addEventListener('touchend', () => clearTimeout(pt));
+                    div.addEventListener('touchmove', () => clearTimeout(pt));
+                    stickerGrid.appendChild(div);
+                });
+                const importBtn = document.createElement('div');
+                importBtn.className = 'sticker-import';
+                importBtn.textContent = '+ 导入表情包';
+                importBtn.addEventListener('click', () => {
+                    currentStickerImportTarget = 'user';
+                    hiddenFileInput.click();
+                });
+                stickerGrid.appendChild(importBtn);
+            }
+
+            function fileToBase64(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            // ==================== 设置弹窗 ====================
+            function showSettingsModal() {
+                const existing = document.querySelector('.modal-overlay');
+                if (existing) existing.remove();
+
+                const overlay = document.createElement('div');
+                overlay.className = 'modal-overlay';
+                overlay.innerHTML = `
+                    <div class="modal-sheet" id="settingsSheet">
+                        <h3>⚙️ 设置</h3>
+                        <div class="form-group"><label>对方名字</label><input type="text" id="setPartnerName" value="${escapeHtml(partnerName)}"></div>
+                        <div class="form-group"><label>当前状态</label><input type="text" id="setPartnerStatus" value="${escapeHtml(partnerStatus)}"></div>
+                        <div class="form-group"><label>状态词列表（逗号分隔，随机轮换）</label>
+                            <textarea id="setStatusWords">${statusWords.join(', ')}</textarea>
+                        </div>
+                        <div class="form-group"><label>最快回复时长：<span id="minVal">${replyMinSec}</span>秒（上限30s）</label>
+                            <div class="range-group"><input type="range" id="setReplyMin" min="0" max="30" value="${replyMinSec}" step="1"><span class="range-val" id="minDisplay">${replyMinSec}s</span></div>
+                        </div>
+                        <div class="form-group"><label>最慢回复时长：<span id="maxVal">${replyMaxSec}</span>秒（上限240s）</label>
+                            <div class="range-group"><input type="range" id="setReplyMax" min="1" max="240" value="${replyMaxSec}" step="1"><span class="range-val" id="maxDisplay">${replyMaxSec}s</span></div>
+                        </div>
+                        <div class="form-group"><label>主题色</label>
+                            <div class="color-picker-row" id="accentPicker">
+                                ${['#6B8E7B','#E8917A','#7B9EC7','#C79B6E','#B87ABF','#5BA0A8','#E07090','#8B8B8B'].map(c =>
+                                    `<span class="color-dot${c===accentColor?' selected':''}" data-color="${c}" style="background:${c};"></span>`
+                                ).join('')}
+                                <input type="color" id="customAccent" value="${accentColor}" style="width:34px;height:34px;border:none;cursor:pointer;border-radius:50%;">
+                            </div>
+                        </div>
+                        <div class="form-group"><label>顶栏颜色</label><input type="color" id="setTopbarBg" value="${topbarBg}"></div>
+                        <div class="form-group"><label>底栏颜色</label><input type="color" id="setBottombarBg" value="${bottombarBg}"></div>
+                        <div class="form-group"><label>背景图</label>
+                            <button class="btn-outline btn-sm" id="btnImportBg">📷 从手机相册导入背景图</button>
+                            ${bgImageData ? '<button class="btn-danger btn-sm" id="btnClearBg">清除背景图</button>' : ''}
+                        </div>
+                        <div class="form-group"><label>背景图透明度：<span id="bgOpacityVal">${Math.round(bgOpacity*100)}%</span></label>
+                            <div class="range-group"><input type="range" id="setBgOpacity" min="1" max="40" value="${Math.round(bgOpacity*100)}" step="1"><span class="range-val" id="bgOpDisplay">${Math.round(bgOpacity*100)}%</span></div>
+                        </div>
+                        <div class="form-group"><label>活跃字卡分组（空=全部）</label>
+                            <select id="setActiveGroup"><option value="">-- 全部字卡 --</option></select>
+                        </div>
+                        <div class="btn-row">
+                            <button class="btn-primary" id="btnSaveSettings">💾 保存设置</button>
+                            <button class="btn-outline" id="btnExportAll">📤 导出全部数据</button>
+                            <button class="btn-outline" id="btnImportAll">📥 导入全部数据</button>
+                        </div>
+                        <div class="btn-row" style="margin-top:8px;">
+                            <button class="btn-danger btn-sm" id="btnClearChat">🗑 清空聊天记录</button>
+                            <button class="btn-danger btn-sm" id="btnResetAll">⚠️ 重置全部数据</button>
+                        </div>
+                        <button class="btn-outline" style="width:100%;margin-top:12px;" id="btnCloseSettings">关闭</button>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+
+                // 填充活跃分组下拉
+                populateGroupSelect();
+
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) overlay.remove();
+                });
+
+                const sheet = overlay.querySelector('#settingsSheet');
+                sheet.addEventListener('click', (e) => e.stopPropagation());
+
+                overlay.querySelector('#btnCloseSettings').addEventListener('click', () => overlay.remove());
+
+                // 实时更新范围显示
+                overlay.querySelector('#setReplyMin').addEventListener('input', function() {
+                    overlay.querySelector('#minDisplay').textContent = this.value + 's';
+                    overlay.querySelector('#minVal').textContent = this.value;
+                });
+                overlay.querySelector('#setReplyMax').addEventListener('input', function() {
+                    overlay.querySelector('#maxDisplay').textContent = this.value + 's';
+                    overlay.querySelector('#maxVal').textContent = this.value;
+                });
+                overlay.querySelector('#setBgOpacity').addEventListener('input', function() {
+                    overlay.querySelector('#bgOpDisplay').textContent = this.value + '%';
+                    overlay.querySelector('#bgOpacityVal').textContent = this.value + '%';
+                });
+
+                // 颜色选择
+                overlay.querySelector('#accentPicker').addEventListener('click', function(e) {
+                    if (e.target.classList.contains('color-dot')) {
+                        const color = e.target.dataset.color;
+                        overlay.querySelector('#customAccent').value = color;
+                        updateAccentDots(overlay, color);
+                    }
+                });
+                overlay.querySelector('#customAccent').addEventListener('input', function() {
+                    updateAccentDots(overlay, this.value);
+                });
+
+                overlay.querySelector('#btnImportBg').addEventListener('click', () => hiddenBgInput.click());
+                overlay.querySelector('#btnClearBg')?.addEventListener('click', async () => {
+                    bgImageData = null;
+                    await dbPut('settings', { key: 'bgImageData', value: null });
+                    applyAllSettings();
+                    overlay.remove();
+                    showSettingsModal();
+                });
+
+                overlay.querySelector('#btnSaveSettings').addEventListener('click', async () => {
+                    partnerName = overlay.querySelector('#setPartnerName').value.trim() || 'Satoru';
+                    partnerStatus = overlay.querySelector('#setPartnerStatus').value.trim() || '💭 在想你...';
+                    const swRaw = overlay.querySelector('#setStatusWords').value.trim();
+                    statusWords = swRaw ? swRaw.split(/[,，\n]+/).map(s => s.trim()).filter(Boolean) : [
+                        '💭 在想你...'
+                    ];
+                    replyMinSec = Math.max(0, Math.min(30, Number(overlay.querySelector('#setReplyMin')
+                        .value)));
+                    replyMaxSec = Math.max(1, Math.min(240, Number(overlay.querySelector('#setReplyMax')
+                        .value)));
+                    accentColor = overlay.querySelector('#customAccent').value;
+                    topbarBg = overlay.querySelector('#setTopbarBg').value;
+                    bottombarBg = overlay.querySelector('#setBottombarBg').value;
+                    bgOpacity = Number(overlay.querySelector('#setBgOpacity').value) / 100;
+                    activeWordCardGroupId = overlay.querySelector('#setActiveGroup').value || null;
+
+                    await dbPut('settings', { key: 'partnerName', value: partnerName });
+                    await dbPut('settings', { key: 'partnerStatus', value: partnerStatus });
+                    await dbPut('settings', { key: 'statusWords', value: JSON.stringify(statusWords) });
+                    await dbPut('settings', { key: 'replyMinSec', value: replyMinSec });
+                    await dbPut('settings', { key: 'replyMaxSec', value: replyMaxSec });
+                    await dbPut('settings', { key: 'accentColor', value: accentColor });
+                    await dbPut('settings', { key: 'topbarBg', value: topbarBg });
+                    await dbPut('settings', { key: 'bottombarBg', value: bottombarBg });
+                    await dbPut('settings', { key: 'bgOpacity', value: bgOpacity });
+                    await dbPut('settings', { key: 'activeWordCardGroupId', value: activeWordCardGroupId ||
+                            null });
+
+                    applyAllSettings();
+                    overlay.remove();
+                });
+
+                overlay.querySelector('#btnExportAll').addEventListener('click', async () => {
+                    const allData = {
+                        messages: await dbGetAll('messages'),
+                        wordCardGroups: await dbGetAll('wordCardGroups'),
+                        wordCards: await dbGetAll('wordCards'),
+                        partnerStickers: await dbGetAll('partnerStickers'),
+                        userStickers: await dbGetAll('userStickers'),
+                        settings: await dbGetAll('settings'),
+                        avatars: await dbGetAll('avatars'),
+                        exportTime: new Date().toISOString(),
+                        version: DB_VERSION
+                    };
+                    const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'LoveSatoru_backup_' + new Date().toISOString().slice(0, 10) + '.json';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                });
+
+                overlay.querySelector('#btnImportAll').addEventListener('click', () => hiddenJsonInput.click());
+                hiddenJsonInput.addEventListener('change', async function handler(e) {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    try {
+                        const text = await file.text();
+                        const data = JSON.parse(text);
+                        if (data.messages) {
+                            await dbClear('messages');
+                            for (const m of data.messages) await dbPut('messages', m);
+                        }
+                        if (data.wordCardGroups) {
+                            await dbClear('wordCardGroups');
+                            for (const g of data.wordCardGroups) await dbPut('wordCardGroups', g);
+                        }
+                        if (data.wordCards) {
+                            await dbClear('wordCards');
+                            for (const c of data.wordCards) await dbPut('wordCards', c);
+                        }
+                        if (data.partnerStickers) {
+                            await dbClear('partnerStickers');
+                            for (const s of data.partnerStickers) await dbPut('partnerStickers', s);
+                        }
+                        if (data.userStickers) {
+                            await dbClear('userStickers');
+                            for (const s of data.userStickers) await dbPut('userStickers', s);
+                        }
+                        if (data.settings) {
+                            await dbClear('settings');
+                            for (const s of data.settings) await dbPut('settings', s);
+                        }
+                        if (data.avatars) {
+                            await dbClear('avatars');
+                            for (const a of data.avatars) await dbPut('avatars', a);
+                        }
+                        await loadAllData();
+                        applyAllSettings();
+                        await renderAllMessages();
+                        overlay.remove();
+                        alert('✅ 数据导入成功！');
+                    } catch (err) {
+                        alert('❌ 导入失败：' + err.message);
+                    }
+                    hiddenJsonInput.value = '';
+                    hiddenJsonInput.removeEventListener('change', handler);
+                });
+
+                overlay.querySelector('#btnClearChat')?.addEventListener('click', async () => {
+                    if (confirm('确定清空所有聊天记录吗？此操作不可撤销。')) {
+                        await dbClear('messages');
+                        await renderAllMessages();
+                        overlay.remove();
+                    }
+                });
+
+                overlay.querySelector('#btnResetAll')?.addEventListener('click', async () => {
+                    if (confirm('⚠️ 确定重置全部数据吗？所有聊天记录、字卡、表情包、设置都将被清除！')) {
+                        const stores = ['messages', 'wordCardGroups', 'wordCards', 'partnerStickers',
+                            'userStickers', 'settings', 'avatars'
+                        ];
+                        for (const s of stores) await dbClear(s);
+                        location.reload();
+                    }
+                });
+            }
+
+            function updateAccentDots(overlay, color) {
+                overlay.querySelectorAll('.color-dot').forEach(d => d.classList.toggle('selected', d.dataset.color ===
+                    color));
+            }
+
+            async function populateGroupSelect() {
+                const select = document.querySelector('#setActiveGroup');
+                if (!select) return;
+                const groups = await dbGetAll('wordCardGroups');
+                select.innerHTML = '<option value="">-- 全部字卡 --</option>';
+                groups.forEach(g => {
+                    select.innerHTML +=
+                        `<option value="${g.id}" ${activeWordCardGroupId===g.id?'selected':''}>${escapeHtml(g.name)}</option>`;
+                });
+            }
+
+            // ==================== 字卡板块弹窗 ====================
+            async function showWordCardModal() {
+                const existing = document.querySelector('.modal-overlay');
+                if (existing) existing.remove();
+
+                const groups = await dbGetAll('wordCardGroups');
+                const allCards = await dbGetAll('wordCards');
+                const pStickers = await dbGetAll('partnerStickers');
+
+                const overlay = document.createElement('div');
+                overlay.className = 'modal-overlay';
+                overlay.innerHTML = `
+                    <div class="modal-sheet" id="wordCardSheet">
+                        <h3>📝 字卡板块</h3>
+                        <div class="form-group"><label>字卡分组</label>
+                            <div class="chip-row" id="groupChips"></div>
+                            <div style="display:flex;gap:6px;margin-top:6px;">
+                                <input type="text" id="newGroupName" placeholder="新分组名" style="flex:1;">
+                                <button class="btn-primary btn-sm" id="btnAddGroup">+添加</button>
+                            </div>
+                        </div>
+                        <div class="form-group"><label>当前分组字卡（共<span id="cardCount">0</span>条）</label>
+                            <textarea id="batchCardsInput" placeholder="批量导入字卡，一行一条&#10;自动查重，重复内容将被跳过"></textarea>
+                            <div class="btn-row" style="margin-top:6px;">
+                                <button class="btn-primary btn-sm" id="btnBatchImport">📥 批量导入（换行分隔）</button>
+                                <button class="btn-outline btn-sm" id="btnJsonImport">📄 导入JSON文件</button>
+                                <button class="btn-outline btn-sm" id="btnExportCards">📤 导出字卡JSON</button>
+                            </div>
+                        </div>
+                        <div class="form-group" style="max-height:200px;overflow-y:auto;" id="cardListContainer">
+                            <div style="font-size:12px;color:#999;" id="cardListHint">选择分组查看字卡</div>
+                        </div>
+                        <hr style="border:none;border-top:1px solid #eee;margin:14px 0;">
+                        <div class="form-group"><label>🐱 对方表情包库（对方回复时可随机发送）</label>
+                            <div style="display:flex;flex-wrap:wrap;gap:8px;" id="partnerStickerGrid">
+                                ${pStickers.map(s=>`<div class="sticker-item" style="width:70px;height:70px;border-radius:10px;overflow:hidden;position:relative;" data-sid="${s.id}"><img src="${s.data}" style="width:100%;height:100%;object-fit:cover;"><span style="position:absolute;top:2px;right:4px;font-size:10px;color:#e00;cursor:pointer;background:rgba(255,255,255,0.8);border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;" class="delPSticker">×</span></div>`).join('')}
+                                <div class="sticker-item" style="width:70px;height:70px;border:2px dashed #ddd;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:24px;color:#aaa;" id="btnAddPartnerSticker">+</div>
+                            </div>
+                        </div>
+                        <button class="btn-outline" style="width:100%;margin-top:10px;" id="btnCloseWordCards">关闭</button>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) overlay.remove();
+                });
+                overlay.querySelector('#wordCardSheet').addEventListener('click', (e) => e.stopPropagation());
+                overlay.querySelector('#btnCloseWordCards').addEventListener('click', () => overlay.remove());
+
+                // 渲染分组chips
+                const groupChips = overlay.querySelector('#groupChips');
+                let selectedGroupId = activeWordCardGroupId;
+
+                function renderGroupChips() {
+                    groupChips.innerHTML = '';
+                    const allChip = document.createElement('span');
+                    allChip.className = 'chip' + (selectedGroupId === null ? ' active' : '');
+                    allChip.textContent = '全部';
+                    allChip.addEventListener('click', () => { selectedGroupId = null;
+                        renderGroupChips();
+                        renderCardList(); });
+                    groupChips.appendChild(allChip);
+                    groups.forEach(g => {
+                        const chip = document.createElement('span');
+                        chip.className = 'chip' + (selectedGroupId === g.id ? ' active' : '');
+                        chip.innerHTML =
+                            `${escapeHtml(g.name)} <span class="chip-del" data-gid="${g.id}">×</span>`;
+                        chip.addEventListener('click', (e) => {
+                            if (e.target.classList.contains('chip-del')) {
+                                e.stopPropagation();
+                                if (confirm('删除分组「' + g.name + '」及其所有字卡？')) {
+                                    deleteGroup(g.id).then(() => {
+                                        groups.splice(groups.findIndex(x => x.id === g
+                                            .id), 1);
+                                        if (selectedGroupId === g.id)
+                                            selectedGroupId = null;
+                                        renderGroupChips();
+                                        renderCardList();
+                                    });
+                                }
+                                return;
+                            }
+                            selectedGroupId = g.id;
+                            renderGroupChips();
+                            renderCardList();
+                        });
+                        groupChips.appendChild(chip);
+                    });
+                }
+
+                async function deleteGroup(gid) {
+                    await dbDelete('wordCardGroups', gid);
+                    const cards = await dbGetAll('wordCards');
+                    for (const c of cards) {
+                        if (c.groupId === gid) await dbDelete('wordCards', c.id);
+                    }
+                }
+
+                async function renderCardList() {
+                    const container = overlay.querySelector('#cardListContainer');
+                    const countEl = overlay.querySelector('#cardCount');
+                    let cards;
+                    if (selectedGroupId) {
+                        cards = allCards.filter(c => c.groupId === selectedGroupId);
+                    } else {
+                        cards = allCards;
+                    }
+                    countEl.textContent = cards.length;
+                    if (cards.length === 0) {
+                        container.innerHTML = '<div style="font-size:12px;color:#999;">暂无字卡，请导入</div>';
+                    } else {
+                        container.innerHTML = cards.map(c =>
+                            `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:#f9f9f9;border-radius:8px;margin-bottom:4px;font-size:13px;"><span>${escapeHtml(c.content)}</span><button class="btn-danger btn-sm" data-cid="${c.id}" style="padding:3px 8px;font-size:10px;">删除</button></div>`
+                        ).join('');
+                        container.querySelectorAll('[data-cid]').forEach(btn => {
+                            btn.addEventListener('click', async () => {
+                                const cid = Number(btn.dataset.cid);
+                                await dbDelete('wordCards', cid);
+                                const idx = allCards.findIndex(x => x.id === cid);
+                                if (idx >= 0) allCards.splice(idx, 1);
+                                renderCardList();
+                            });
+                        });
+                    }
+                }
+
+                renderGroupChips();
+                renderCardList();
+
+                // 添加分组
+                overlay.querySelector('#btnAddGroup').addEventListener('click', async () => {
+                    const name = overlay.querySelector('#newGroupName').value.trim();
+                    if (!name) return;
+                    const g = { id: 'g_' + Date.now(), name: name, createdAt: Date.now() };
+                    await dbPut('wordCardGroups', g);
+                    groups.push(g);
+                    overlay.querySelector('#newGroupName').value = '';
+                    renderGroupChips();
+                });
+
+                // 批量导入
+                overlay.querySelector('#btnBatchImport').addEventListener('click', async () => {
+                    const raw = overlay.querySelector('#batchCardsInput').value.trim();
+                    if (!raw) return;
+                    const lines = raw.split(/\n+/).map(l => l.trim()).filter(Boolean);
+                    const existingContents = new Set(allCards.filter(c => !selectedGroupId || c.groupId ===
+                        selectedGroupId).map(c => c.content));
+                    let added = 0;
+                    for (const line of lines) {
+                        if (!existingContents.has(line)) {
+                            const card = { groupId: selectedGroupId, content: line, createdAt: Date.now() };
+                            const id = await dbPut('wordCards', card);
+                            card.id = id;
+                            allCards.push(card);
+                            existingContents.add(line);
+                            added++;
+                        }
+                    }
+                    overlay.querySelector('#batchCardsInput').value = '';
+                    renderCardList();
+                    alert(`✅ 导入完成！新增 ${added} 条，跳过 ${lines.length - added} 条重复。`);
+                });
+
+                // JSON导入
+                overlay.querySelector('#btnJsonImport').addEventListener('click', () => {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = '.json,application/json';
+                    input.addEventListener('change', async function handler(e) {
+                        const file = e.target.files[0];
+                        if (!file) return;
+                        try {
+                            const text = await file.text();
+                            const data = JSON.parse(text);
+                            let entries = [];
+                            if (Array.isArray(data)) entries = data;
+                            else if (data.cards && Array.isArray(data.cards)) entries = data.cards;
+                            else if (typeof data === 'object') entries = Object.values(data).filter(
+                                typeof item => typeof item === 'string');
+                            entries = entries.filter(e => typeof e === 'string').map(s => s.trim()).filter(
+                                Boolean);
+                            const existingContents = new Set(allCards.filter(c => !selectedGroupId || c
+                                .groupId === selectedGroupId).map(c => c.content));
+                            let added = 0;
+                            for (const entry of entries) {
+                                if (!existingContents.has(entry)) {
+                                    const card = { groupId: selectedGroupId, content: entry,
+                                        createdAt: Date.now() };
+                                    const id = await dbPut('wordCards', card);
+                                    card.id = id;
+                                    allCards.push(card);
+                                    existingContents.add(entry);
+                                    added++;
+                                }
+                            }
+                            renderCardList();
+                            alert(`✅ JSON导入完成！新增 ${added} 条，跳过 ${entries.length - added} 条重复。`);
+                        } catch (err) {
+                            alert('❌ JSON解析失败：' + err.message);
+                        }
+                        input.removeEventListener('change', handler);
+                    });
+                    input.click();
+                });
+
+                // 导出字卡
+                overlay.querySelector('#btnExportCards').addEventListener('click', async () => {
+                    let cards;
+                    if (selectedGroupId) {
+                        cards = allCards.filter(c => c.groupId === selectedGroupId);
+                    } else {
+                        cards = allCards;
+                    }
+                    const exportData = cards.map(c => c.content);
+                    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'LoveSatoru_wordcards_' + new Date().toISOString().slice(0, 10) + '.json';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                });
+
+                // 对方表情包库
+                overlay.querySelector('#btnAddPartnerSticker').addEventListener('click', () => {
+                    currentStickerImportTarget = 'partner';
+                    hiddenFileInput.click();
+                });
+                const refreshPStickers = async () => {
+                    const updated = await dbGetAll('partnerStickers');
+                    const grid = overlay.querySelector('#partnerStickerGrid');
+                    if (grid) {
+                        grid.innerHTML = updated.map(s =>
+                            `<div class="sticker-item" style="width:70px;height:70px;border-radius:10px;overflow:hidden;position:relative;" data-sid="${s.id}"><img src="${s.data}" style="width:100%;height:100%;object-fit:cover;"><span style="position:absolute;top:2px;right:4px;font-size:10px;color:#e00;cursor:pointer;background:rgba(255,255,255,0.8);border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;" class="delPSticker">×</span></div>`
+                        ).join('') +
+                            '<div class="sticker-item" style="width:70px;height:70px;border:2px dashed #ddd;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:24px;color:#aaa;" id="btnAddPartnerSticker2">+</div>';
+                        grid.querySelectorAll('.delPSticker').forEach(span => {
+                            span.addEventListener('click', async (e) => {
+                                e.stopPropagation();
+                                const sid = Number(span.parentElement.dataset.sid);
+                                await dbDelete('partnerStickers', sid);
+                                await refreshPStickers();
+                            });
+                        });
+                        grid.querySelector('#btnAddPartnerSticker2')?.addEventListener('click', () => {
+                            currentStickerImportTarget = 'partner';
+                            hiddenFileInput.click();
+                        });
+                    }
+                };
+                overlay.querySelectorAll('.delPSticker').forEach(span => {
+                    span.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        const sid = Number(span.parentElement.dataset.sid);
+                        await dbDelete('partnerStickers', sid);
+                        await refreshPStickers();
+                    });
+                });
+
+                // 监听hiddenFileInput以刷新
+                const origHandler = hiddenFileInput.onchange;
+                hiddenFileInput.addEventListener('change', async function refreshHandler() {
+                    await refreshPStickers();
+                    await renderStickerPanel();
+                });
+            }
+
+            // ==================== 全局导出/导入 ====================
+            // (已在设置弹窗中实现)
+
+            // ==================== 启动 ====================
+            init().catch(err => {
+                console.error('初始化失败:', err);
+                alert('初始化失败，请刷新页面重试。\n' + err.message);
+            });
+
+            console.log('💕 LoveSatoru 已就绪');
+            console.log('📱 专为手机浏览器优化');
+            console.log('💾 数据存储在 IndexedDB 中');
+            console.log('📤📥 支持完整数据导入导出');
+        })();
+    </script>
+</body>
+</html>
